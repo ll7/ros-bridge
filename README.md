@@ -77,6 +77,9 @@ Wait a few seconds
 
     export PYTHONPATH=$PYTHONPATH:<path-to-carla>/PythonAPI/carla/dist/carla-<carla_version_and_arch>.egg
 
+LL:
+    export PYTHONPATH=$PYTHONPATH:~/git/Carla/Carla0.9.8/PythonAPI/carla/dist/carla-0.9.8-py2.7-linux-x86_64.egg
+
 ##### For Users
 
     source /opt/carla-ros-bridge/<melodic or kinetic>/setup.bash
@@ -84,6 +87,9 @@ Wait a few seconds
 ##### For Developers
 
     source ~/carla-ros-bridge/catkin_ws/devel/setup.bash
+
+LL:
+    source ~/git/Carla/ros/catkin_ws/devel/setup.bash
 
 Start the ros bridge (choose one option):
 
