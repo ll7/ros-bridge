@@ -8,6 +8,7 @@
 """
 A basic AD agent using CARLA waypoints
 """
+import sys
 import rospy
 from nav_msgs.msg import Path
 from std_msgs.msg import Float64
@@ -31,8 +32,13 @@ class CarlaAdAgent(object):
         rospy.on_shutdown(self.on_shutdown)
 
         # wait for ego vehicle
-        vehicle_info = rospy.wait_for_message(
-            "/carla/{}/vehicle_info".format(role_name), CarlaEgoVehicleInfo)
+        vehicle_info = None
+        try:
+            vehicle_info = rospy.wait_for_message(
+                "/carla/{}/vehicle_info".format(role_name), CarlaEgoVehicleInfo)
+        except rospy.ROSException:
+            rospy.logerr("Timeout while waiting for world info!")
+            sys.exit(1)
 
         self._route_subscriber = rospy.Subscriber(
             "/carla/{}/waypoints".format(role_name), Path, self.path_updated)
@@ -91,7 +97,10 @@ class CarlaAdAgent(object):
                 self._global_plan.poses)
             self._route_assigned = True
         else:
-            control = self._agent.run_step(self._target_speed)
+            control, finished = self._agent.run_step(self._target_speed)
+            if finished:
+                self._global_plan = None
+                self._route_assigned = False
 
         return control
 
@@ -102,12 +111,18 @@ class CarlaAdAgent(object):
 
         :return:
         """
-
+        r = rospy.Rate(10)
         while not rospy.is_shutdown():
-            control = self.run_step()
-            if control:
-                control.steer = -control.steer
-                self.vehicle_control_publisher.publish(control)
+            if self._global_plan:
+                control = self.run_step()
+                if control:
+                    control.steer = -control.steer
+                    self.vehicle_control_publisher.publish(control)
+            else:
+                try:
+                    r.sleep()
+                except rospy.ROSInterruptException:
+                    pass
 
 
 def main():

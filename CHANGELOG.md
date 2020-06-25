@@ -1,5 +1,17 @@
 ## Latest changed
 
+*   Fixed wrong TF for ego_vehicle
+*   Improve version check
+*   Fix cleanup
+*   Rework tf frame names
+*   ObjectSensor: Fix object twist
+*   Support loading OpenDRIVE map
+*   Traffic Lights: Only publish to /carla/traffic_lights on change
+*   Traffic Lights: Publish /carla/traffic_lights_info, containing the location and the trigger volume
+*   Added ROS Parameter to set the CARLA client timeout value for all nodes consistently
+
+## CARLA-ROS-Bridge 0.9.8
+
 *   change Lidar range in meters
 *   add new attributes for Gnss and Camera sensor
 *   add IMU and Radar sensor

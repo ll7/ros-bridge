@@ -7,7 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_python_setup()
 
-roslaunch_add_file_check(launch)
+roslaunch_add_file_check(launch IGNORE_UNSET_ARGS)
 
 catkin_package()
 
@@ -15,6 +15,7 @@ catkin_install_python(PROGRAMS
   src/carla_ros_scenario_runner/carla_ros_scenario_runner.py
   src/carla_ros_scenario_runner/application_runner.py
   src/carla_ros_scenario_runner/scenario_runner_runner.py
+  src/carla_ros_scenario_runner/ros_vehicle_control.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

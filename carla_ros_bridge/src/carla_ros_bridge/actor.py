@@ -16,7 +16,7 @@ from std_msgs.msg import ColorRGBA
 from visualization_msgs.msg import Marker
 
 from carla_ros_bridge.pseudo_actor import PseudoActor
-import carla_ros_bridge.transforms as trans
+import carla_common.transforms as trans
 
 
 class Actor(PseudoActor):
@@ -66,6 +66,18 @@ class Actor(PseudoActor):
         return trans.carla_transform_to_ros_pose(
             self.carla_actor.get_transform())
 
+    def get_current_ros_twist_rotated(self):
+        """
+        Function to provide the current ROS twist rotated
+
+        :return: the ROS twist of this actor
+        :rtype: geometry_msgs.msg.Twist
+        """
+        return trans.carla_velocity_to_ros_twist(
+            self.carla_actor.get_velocity(),
+            self.carla_actor.get_angular_velocity(),
+            self.carla_actor.get_transform().rotation)
+
     def get_current_ros_twist(self):
         """
         Function to provide the current ROS twist
@@ -75,8 +87,7 @@ class Actor(PseudoActor):
         """
         return trans.carla_velocity_to_ros_twist(
             self.carla_actor.get_velocity(),
-            self.carla_actor.get_angular_velocity(),
-            self.carla_actor.get_transform().rotation)
+            self.carla_actor.get_angular_velocity())
 
     def get_current_ros_accel(self):
         """
@@ -96,7 +107,7 @@ class Actor(PseudoActor):
         """
         return self.carla_actor_id
 
-    def get_ros_transform(self, transform=None):
+    def get_ros_transform(self, transform=None, frame_id=None, child_frame_id=None):
         """
         Function to provide the current ROS transform
 
@@ -104,10 +115,16 @@ class Actor(PseudoActor):
         :rtype: geometry_msgs.msg.TransformStamped
         """
         tf_msg = TransformStamped()
-        tf_msg.header = self.get_msg_header("map")
-        tf_msg.child_frame_id = self.get_prefix()
+        if frame_id:
+            tf_msg.header = self.get_msg_header(frame_id)
+        else:
+            tf_msg.header = self.get_msg_header("map")
+        if child_frame_id:
+            tf_msg.child_frame_id = child_frame_id
+        else:
+            tf_msg.child_frame_id = self.get_prefix()
         if transform:
-            tf_msg.transform = trans.carla_transform_to_ros_transform(transform)
+            tf_msg.transform = transform
         else:
             tf_msg.transform = trans.carla_transform_to_ros_transform(
                 self.carla_actor.get_transform())
@@ -138,15 +155,11 @@ class Actor(PseudoActor):
         """
         Helper function to create a ROS visualization_msgs.msg.Marker for the actor
 
-        :param use_parent_frame: per default (True) the header.frame_id
-            is set to the frame of the actor's parent.
-            If this is set to False, the actor's own frame is used as basis.
-        :type use_parent_frame:  boolean
         :return:
         visualization_msgs.msg.Marker
         """
         marker = Marker(
-            header=self.get_msg_header())
+            header=self.get_msg_header(frame_id=str(self.get_id())))
         marker.color = self.get_marker_color()
         marker.color.a = 0.3
         marker.id = self.get_id()

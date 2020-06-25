@@ -18,6 +18,7 @@ except ImportError:
     import Queue as queue
 import rospy
 from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Path
 from std_msgs.msg import Float64
 from carla_ros_scenario_runner_types.srv import ExecuteScenario, ExecuteScenarioResponse
 from carla_ros_scenario_runner_types.msg import CarlaScenarioRunnerStatus
@@ -46,20 +47,18 @@ class CarlaRosScenarioRunner(object):
     Execute scenarios via ros service
     """
 
-    def __init__(self, role_name, host, scenario_runner_path):
+    def __init__(self, role_name, host, port, scenario_runner_path, wait_for_ego):
         """
         Constructor
         """
-        self._goal_publisher = rospy.Publisher(
-            "/carla/{}/goal".format(role_name), PoseStamped, queue_size=1, latch=True)
-        self._target_speed_publisher = rospy.Publisher(
-            "/carla/{}/target_speed".format(role_name), Float64, queue_size=1, latch=True)
         self._status_publisher = rospy.Publisher(
             "/scenario_runner/status", CarlaScenarioRunnerStatus, queue_size=1, latch=True)
         self.scenario_runner_status_updated(ApplicationStatus.STOPPED)
         self._scenario_runner = ScenarioRunnerRunner(
             scenario_runner_path,
             host,
+            port,
+            wait_for_ego,
             self.scenario_runner_status_updated,
             self.scenario_runner_log)
         self._request_queue = queue.Queue()
@@ -122,13 +121,7 @@ class CarlaRosScenarioRunner(object):
                     self._scenario_runner.shutdown()
                     rospy.loginfo("Scenario Runner stopped.")
                 rospy.loginfo("Executing scenario {}...".format(current_req.name))
-                # publish goal
-                goal = PoseStamped(pose=current_req.destination)
-                goal.header.stamp = rospy.get_rostime()
-                goal.header.frame_id = "map"
-                self._goal_publisher.publish(goal)
-                # publish target speed
-                self._target_speed_publisher.publish(Float64(data=current_req.target_speed))
+
                 # execute scenario
                 scenario_executed = self._scenario_runner.execute_scenario(
                     current_req.scenario_file)
@@ -156,8 +149,11 @@ def main():
     rospy.init_node('carla_ros_scenario_runner', anonymous=True)
     role_name = rospy.get_param("~role_name", "ego_vehicle")
     scenario_runner_path = rospy.get_param("~scenario_runner_path", "")
+    wait_for_ego = rospy.get_param("~wait_for_ego", "True")
     host = rospy.get_param("~host", "localhost")
-    scenario_runner = CarlaRosScenarioRunner(role_name, host, scenario_runner_path)
+    port = rospy.get_param("~port", 2000)
+    scenario_runner = CarlaRosScenarioRunner(
+        role_name, host, port, scenario_runner_path, wait_for_ego)
     try:
         scenario_runner.run()
     finally:

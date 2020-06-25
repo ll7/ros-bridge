@@ -20,6 +20,7 @@ position. If no /initialpose is set at startup, a random spawnpoint is used.
 from abc import abstractmethod
 
 import os
+import sys
 import random
 import math
 import json
@@ -49,6 +50,7 @@ class CarlaEgoVehicle(object):
         rospy.init_node('ego_vehicle', anonymous=True)
         self.host = rospy.get_param('/carla/host', '127.0.0.1')
         self.port = rospy.get_param('/carla/port', '2000')
+        self.timeout = rospy.get_param('/carla/timeout', '2')
         self.sensor_definition_file = rospy.get_param('~sensor_definition_file')
         self.world = None
         self.player = None
@@ -180,8 +182,18 @@ class CarlaEgoVehicle(object):
         """
         actors = []
         bp_library = self.world.get_blueprint_library()
+        sensor_names = []
         for sensor_spec in sensors:
             try:
+                sensor_name = str(sensor_spec['type']) + "/" + str(sensor_spec['id'])
+                if sensor_name in sensor_names:
+                    rospy.logfatal(
+                        "Sensor rolename '{}' is only allowed to be used once.".format(
+                            sensor_spec['id']))
+                    raise NameError(
+                        "Sensor rolename '{}' is only allowed to be used once.".format(
+                            sensor_spec['id']))
+                sensor_names.append(sensor_name)
                 bp = bp_library.find(str(sensor_spec['type']))
                 bp.set_attribute('role_name', str(sensor_spec['id']))
                 if sensor_spec['type'].startswith('sensor.camera'):
@@ -305,7 +317,7 @@ class CarlaEgoVehicle(object):
             except KeyError as e:
                 rospy.logfatal(
                     "Sensor will not be spawned, because sensor spec is invalid: '{}'".format(e))
-                continue
+                raise e
 
             # create sensor
             sensor_transform = carla.Transform(sensor_location, sensor_rotation)
@@ -343,13 +355,14 @@ class CarlaEgoVehicle(object):
         rospy.loginfo("Waiting for CARLA world (topic: /carla/world_info)...")
         try:
             rospy.wait_for_message("/carla/world_info", CarlaWorldInfo, timeout=10.0)
-        except rospy.ROSException as e:
+        except rospy.ROSException:
             rospy.logerr("Timeout while waiting for world info!")
-            raise e
+            sys.exit(1)
+
         rospy.loginfo("CARLA world available. Spawn ego vehicle...")
 
         client = carla.Client(self.host, self.port)
-        client.set_timeout(2.0)
+        client.set_timeout(self.timeout)
         self.world = client.get_world()
         self.restart()
         try:

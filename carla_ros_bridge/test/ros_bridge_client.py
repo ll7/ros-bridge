@@ -16,15 +16,16 @@ import rostest
 from std_msgs.msg import Header
 from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import CameraInfo, NavSatFix, Image, PointCloud2, Imu
-from ainstein_radar_msgs.msg import RadarTargetArray
 from geometry_msgs.msg import Quaternion, Vector3, Pose
 from nav_msgs.msg import Odometry
 from derived_object_msgs.msg import ObjectArray
 from visualization_msgs.msg import Marker
 from carla_msgs.msg import (CarlaEgoVehicleStatus, CarlaEgoVehicleInfo, CarlaWorldInfo,
-                            CarlaActorList)
+                            CarlaActorList, CarlaTrafficLightStatusList,
+                            CarlaTrafficLightInfoList, CarlaRadarMeasurement)
 
 PKG = 'test_roslaunch'
+TIMEOUT = 20
 
 class TestClock(unittest.TestCase):
 
@@ -37,7 +38,7 @@ class TestClock(unittest.TestCase):
         Tests clock
         """
         rospy.init_node('test_node', anonymous=True)
-        clock_msg = rospy.wait_for_message("/clock", Clock, timeout=15)
+        clock_msg = rospy.wait_for_message("/clock", Clock, timeout=TIMEOUT)
         self.assertNotEqual(Clock(), clock_msg)
 
     def test_vehicle_status(self):
@@ -46,7 +47,7 @@ class TestClock(unittest.TestCase):
         """
         rospy.init_node('test_node', anonymous=True)
         msg = rospy.wait_for_message(
-            "/carla/ego_vehicle/vehicle_status", CarlaEgoVehicleStatus, timeout=15)
+            "/carla/ego_vehicle/vehicle_status", CarlaEgoVehicleStatus, timeout=TIMEOUT)
         self.assertNotEqual(msg.header, Header())  # todo: check frame-id
         self.assertNotEqual(msg.orientation, Quaternion())
 
@@ -56,7 +57,7 @@ class TestClock(unittest.TestCase):
         """
         rospy.init_node('test_node', anonymous=True)
         msg = rospy.wait_for_message(
-            "/carla/ego_vehicle/vehicle_info", CarlaEgoVehicleInfo, timeout=15)
+            "/carla/ego_vehicle/vehicle_info", CarlaEgoVehicleInfo, timeout=TIMEOUT)
         self.assertNotEqual(msg.id, 0)
         self.assertEqual(msg.type, "vehicle.tesla.model3")
         self.assertEqual(msg.rolename, "ego_vehicle")
@@ -80,7 +81,7 @@ class TestClock(unittest.TestCase):
         """
         rospy.init_node('test_node', anonymous=True)
         msg = rospy.wait_for_message(
-            "/carla/ego_vehicle/odometry", Odometry, timeout=15)
+            "/carla/ego_vehicle/odometry", Odometry, timeout=TIMEOUT)
         self.assertEqual(msg.header.frame_id, "map")
         self.assertEqual(msg.child_frame_id, "ego_vehicle")
         self.assertNotEqual(msg.pose, Pose())
@@ -91,7 +92,7 @@ class TestClock(unittest.TestCase):
         """
         rospy.init_node('test_node', anonymous=True)
         msg = rospy.wait_for_message(
-            "/carla/ego_vehicle/gnss/gnss1/fix", NavSatFix, timeout=15)
+            "/carla/ego_vehicle/gnss/gnss1/fix", NavSatFix, timeout=TIMEOUT)
         self.assertEqual(msg.header.frame_id, "ego_vehicle/gnss/gnss1")
         self.assertNotEqual(msg.latitude, 0.0)
         self.assertNotEqual(msg.longitude, 0.0)
@@ -115,7 +116,7 @@ class TestClock(unittest.TestCase):
         """
         rospy.init_node('test_node', anonymous=True)
         msg = rospy.wait_for_message(
-            "/carla/ego_vehicle/camera/rgb/front/camera_info", CameraInfo, timeout=15)
+            "/carla/ego_vehicle/camera/rgb/front/camera_info", CameraInfo, timeout=TIMEOUT)
         self.assertEqual(msg.header.frame_id, "ego_vehicle/camera/rgb/front")
         self.assertEqual(msg.height, 600)
         self.assertEqual(msg.width, 800)
@@ -126,7 +127,7 @@ class TestClock(unittest.TestCase):
         """
         rospy.init_node('test_node', anonymous=True)
         msg = rospy.wait_for_message(
-            "/carla/ego_vehicle/camera/rgb/front/image_color", Image, timeout=15)
+            "/carla/ego_vehicle/camera/rgb/front/image_color", Image, timeout=TIMEOUT)
         self.assertEqual(msg.header.frame_id, "ego_vehicle/camera/rgb/front")
         self.assertEqual(msg.height, 600)
         self.assertEqual(msg.width, 800)
@@ -138,7 +139,7 @@ class TestClock(unittest.TestCase):
         """
         rospy.init_node('test_node', anonymous=True)
         msg = rospy.wait_for_message(
-            "/carla/ego_vehicle/lidar/lidar1/point_cloud", PointCloud2, timeout=15)
+            "/carla/ego_vehicle/lidar/lidar1/point_cloud", PointCloud2, timeout=TIMEOUT)
         self.assertEqual(msg.header.frame_id, "ego_vehicle/lidar/lidar1")
 
     def test_radar(self):
@@ -147,7 +148,7 @@ class TestClock(unittest.TestCase):
         """
         rospy.init_node('test_node', anonymous=True)
         msg = rospy.wait_for_message(
-            "/carla/ego_vehicle/radar/front/radar", RadarTargetArray, timeout=15)
+            "/carla/ego_vehicle/radar/front/radar", CarlaRadarMeasurement, timeout=TIMEOUT)
         self.assertEqual(msg.header.frame_id, "ego_vehicle/radar/front")
 
     def test_ego_vehicle_objects(self):
@@ -165,7 +166,7 @@ class TestClock(unittest.TestCase):
         Tests carla objects
         """
         rospy.init_node('test_node', anonymous=True)
-        msg = rospy.wait_for_message("/carla/objects", ObjectArray, timeout=15)
+        msg = rospy.wait_for_message("/carla/objects", ObjectArray, timeout=TIMEOUT)
         self.assertEqual(msg.header.frame_id, "map")
         self.assertEqual(len(msg.objects), 1)  # only ego vehicle exists
 
@@ -174,7 +175,7 @@ class TestClock(unittest.TestCase):
         Tests marker
         """
         rospy.init_node('test_node', anonymous=True)
-        msg = rospy.wait_for_message("/carla/marker", Marker, timeout=15)
+        msg = rospy.wait_for_message("/carla/marker", Marker, timeout=TIMEOUT)
         self.assertEqual(msg.header.frame_id, "ego_vehicle")
         self.assertNotEqual(msg.id, 0)
         self.assertEqual(msg.type, 1)
@@ -190,7 +191,7 @@ class TestClock(unittest.TestCase):
         """
         rospy.init_node('test_node', anonymous=True)
         msg = rospy.wait_for_message(
-            "/carla/world_info", CarlaWorldInfo, timeout=15)
+            "/carla/world_info", CarlaWorldInfo, timeout=TIMEOUT)
         self.assertNotEqual(len(msg.map_name), 0)
         self.assertNotEqual(len(msg.opendrive), 0)
 
@@ -200,8 +201,26 @@ class TestClock(unittest.TestCase):
         """
         rospy.init_node('test_node', anonymous=True)
         msg = rospy.wait_for_message(
-            "/carla/actor_list", CarlaActorList, timeout=15)
+            "/carla/actor_list", CarlaActorList, timeout=TIMEOUT)
         self.assertNotEqual(len(msg.actors), 0)
+
+    def test_traffic_lights(self):
+        """
+        Tests traffic_lights
+        """
+        rospy.init_node('test_node', anonymous=True)
+        msg = rospy.wait_for_message(
+            "/carla/traffic_lights", CarlaTrafficLightStatusList, timeout=TIMEOUT)
+        self.assertNotEqual(len(msg.traffic_lights), 0)
+
+    def test_traffic_lights_info(self):
+        """
+        Tests traffic_lights
+        """
+        rospy.init_node('test_node', anonymous=True)
+        msg = rospy.wait_for_message(
+            "/carla/traffic_lights_info", CarlaTrafficLightInfoList, timeout=TIMEOUT)
+        self.assertNotEqual(len(msg.traffic_lights), 0)
 
 
 if __name__ == '__main__':
