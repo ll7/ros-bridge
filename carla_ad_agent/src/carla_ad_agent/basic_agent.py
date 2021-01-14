@@ -16,8 +16,8 @@ from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Pose
 from derived_object_msgs.msg import ObjectArray
 from carla_msgs.msg import CarlaActorList
-from agent import Agent, AgentState
-from local_planner import LocalPlanner
+from agent import Agent, AgentState  # pylint: disable=relative-import
+from local_planner import LocalPlanner  # pylint: disable=relative-import
 from carla_waypoint_types.srv import GetActorWaypoint
 
 
@@ -50,7 +50,8 @@ class BasicAgent(Agent):
                 "/carla/actor_list", CarlaActorList, self.actors_updated)
             self._objects = []
             self._objects_subscriber = rospy.Subscriber(
-                "/carla/{}/objects".format(role_name), ObjectArray, self.objects_updated)
+                "/carla/{}/objects".format(role_name), ObjectArray,
+                self.objects_updated)
             self._get_actor_waypoint_client = rospy.ServiceProxy(
                 '/carla_waypoint_publisher/{}/get_actor_waypoint'.format(role_name),
                 GetActorWaypoint)

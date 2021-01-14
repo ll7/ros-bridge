@@ -1,5 +1,23 @@
 ## Latest changed
 
+*   Added passive mode. Wordl configuration and ticking are performed by other clients.
+*   Support spawning of pseudo-actors through service
+*   Use new spawning service to combine carla_infrastructure and carla_ego_vehicle into carla_spawn_objects
+*   Reworked ROS topics
+*   rework tf in sync mode to represent attachment of sensors to a vehicle
+*   Updated debian packaging pipeline
+
+## CARLA-ROS-Bridge 0.9.10.1
+
+*   Support noetic and python 3
+*   Have all sensor types in sensors.json
+*   Update ad-demo rviz config to visualize more sensor types
+*   Remove CarlaRadarMeasurement message publishing (radar data is published as PointCloud2 only)
+*   Remove sensors.json from carla_ad_demo. Use example from carla_ego_vehicle instead
+*   Add radar PointCloud2 publisher
+*   Add DVS camera sensor
+*   Fix rgb camera attributes
+*   Add intensity value to point cloud message
 *   Fixed wrong TF for ego_vehicle
 *   Improve version check
 *   Fix cleanup

@@ -13,7 +13,7 @@ from enum import Enum
 import math
 import rospy
 from tf.transformations import euler_from_quaternion
-from misc import is_within_distance_ahead, compute_magnitude_angle
+from misc import is_within_distance_ahead, compute_magnitude_angle  # pylint: disable=relative-import
 from carla_msgs.msg import CarlaEgoVehicleControl, CarlaTrafficLightStatus,\
     CarlaTrafficLightStatusList, CarlaWorldInfo
 from carla_waypoint_types.srv import GetWaypoint
@@ -52,7 +52,8 @@ class Agent(object):
 
             self._traffic_lights = []
             self._traffic_light_status_subscriber = rospy.Subscriber(
-                "/carla/traffic_lights", CarlaTrafficLightStatusList, self.traffic_lights_updated)
+                "/carla/traffic_lights/status",
+                CarlaTrafficLightStatusList, self.traffic_lights_updated)
 
             self._world_info_subscriber = rospy.Subscriber(
                 "/carla/world_info", CarlaWorldInfo, self.world_info_updated)
